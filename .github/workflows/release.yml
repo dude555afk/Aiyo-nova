@@ -46,15 +46,15 @@ jobs:
           distribution: 'temurin'
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
-      - name: Decode keystore
+      - name: Generate keystore
         run: |
-          echo "${{ secrets.SIGNING_KEYSTORE_BASE64 }}" | base64 -d > release.keystore
+          keytool -genkey -v -keystore release.keystore -alias aiyo -keyalg RSA -keysize 2048 -validity 10000 -storepass android -keypass android -dname "CN=,O=,OU=,L=,ST=,C="
       - name: Build APK
         env:
           SIGNING_KEYSTORE_PATH: release.keystore
-          SIGNING_STORE_PASSWORD: ${{ secrets.SIGNING_STORE_PASSWORD }}
-          SIGNING_KEY_ALIAS: ${{ secrets.SIGNING_KEY_ALIAS }}
-          SIGNING_KEY_PASSWORD: ${{ secrets.SIGNING_KEY_PASSWORD }}
+          SIGNING_STORE_PASSWORD: android
+          SIGNING_KEY_ALIAS: aiyo
+          SIGNING_KEY_PASSWORD: android
         run: |
           chmod +x gradlew
           ./gradlew assembleGithubRelease
@@ -64,6 +64,6 @@ jobs:
           tag_name: v${{ needs.check_version_change.outputs.version_name }}
           name: v${{ needs.check_version_change.outputs.version_name }}
           files: app/build/outputs/apk/githubRelease/app-githubRelease.apk
-          body: "Release v${{ needs.check_version_change.outputs.version_name }}"
+          body: "Release v${{ needs.check_version_change.outputs.version_name }} - Kilo.ai anonymous gateway"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
