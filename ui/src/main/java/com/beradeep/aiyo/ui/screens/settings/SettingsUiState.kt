@@ -25,3 +25,4 @@ data class SettingsUiState(
             responseFontSize = SettingRepository.DEFAULT_RESPONSE_FONT_SIZE
         )
     }
+}

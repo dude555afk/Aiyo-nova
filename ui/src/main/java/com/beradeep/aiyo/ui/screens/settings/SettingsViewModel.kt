@@ -128,3 +128,4 @@ open class SettingsViewModel(
     private fun dismissModelSelectionSheet() {
         _uiState.update { it.copy(showModelSelectionSheet = false) }
     }
+}
