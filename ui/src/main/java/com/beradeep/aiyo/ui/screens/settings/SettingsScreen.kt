@@ -1,0 +1,345 @@
+package com.beradeep.aiyo.ui.screens.settings
+
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.ArrowBack
+import androidx.compose.material.icons.filled.FormatSize
+import androidx.compose.material.icons.filled.InvertColors
+import androidx.compose.material.icons.filled.ModelTraining
+import androidx.compose.material.icons.rounded.Visibility
+import androidx.compose.material.icons.rounded.VisibilityOff
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.SegmentedButton
+import androidx.compose.material3.SegmentedButtonDefaults
+import androidx.compose.material3.SingleChoiceSegmentedButtonRow
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.beradeep.aiyo.domain.model.Model
+import com.beradeep.aiyo.domain.model.ThemeType
+import com.beradeep.aiyo.domain.repository.SettingRepository
+import com.beradeep.aiyo.ui.AiyoTheme
+import com.beradeep.aiyo.ui.DarkColors
+import com.beradeep.aiyo.ui.LightColors
+import com.beradeep.aiyo.ui.LocalColors
+import com.beradeep.aiyo.ui.LocalTypography
+import com.beradeep.aiyo.ui.basics.components.HorizontalDivider
+import com.beradeep.aiyo.ui.basics.components.Icon
+import com.beradeep.aiyo.ui.basics.components.IconButton
+import com.beradeep.aiyo.ui.basics.components.IconButtonVariant
+import com.beradeep.aiyo.ui.basics.components.Scaffold
+import com.beradeep.aiyo.ui.basics.components.Slider
+import com.beradeep.aiyo.ui.basics.components.Text
+import com.beradeep.aiyo.ui.basics.components.textfield.OutlinedTextField
+import com.beradeep.aiyo.ui.basics.components.topbar.TopBar
+import com.beradeep.aiyo.ui.screens.components.ModelSelectionSheet
+import kotlin.math.roundToInt
+
+@Composable
+fun SettingsScreen(
+    viewModel: SettingsViewModel,
+    onNavigateBack: () -> Unit
+) {
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
+    Scaffold(
+        topBar = {
+            TopBar {
+                Row(
+                    modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    IconButton(
+                        onClick = onNavigateBack,
+                        variant = IconButtonVariant.PrimaryGhost
+                    ) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
+                            contentDescription = "Back"
+                        )
+                    }
+                    Spacer(Modifier.width(24.dp))
+                    Text("Settings", style = LocalTypography.current.h1)
+                }
+            }
+        }
+    ) { innerPadding ->
+        val focusManager = LocalFocusManager.current
+
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+                .verticalScroll(rememberScrollState())
+                .padding(16.dp)
+                .pointerInput(Unit) {
+                    detectTapGestures {
+                        focusManager.clearFocus()
+                    }
+                }
+        ) {
+
+            HorizontalDivider(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 16.dp)
+            )
+
+            SettingsSection(
+                title = "Model Configuration",
+                icon = Icons.Filled.ModelTraining
+            ) {
+                ModelSelectionSetting(
+                    selectedModel = uiState.selectedModel,
+                    onShowModelSheet = {
+                        viewModel.onUiEvent(SettingsUiEvent.OnShowModelSelectionSheet)
+                    }
+                )
+            }
+
+            HorizontalDivider(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 16.dp)
+            )
+
+            SettingsSection(
+                title = "Typography Configuration",
+                icon = Icons.Filled.FormatSize
+            ) {
+                FontSizeSetting(
+                    label = "Request Font Size",
+                    description = "Used while writing requests and for your sent messages.",
+                    fontSize = uiState.requestFontSize,
+                    onFontSizeChanged = { fontSize ->
+                        viewModel.onUiEvent(SettingsUiEvent.OnUpdateRequestFontSize(fontSize))
+                    }
+                )
+                Spacer(modifier = Modifier.height(16.dp))
+                FontSizeSetting(
+                    label = "Response Font Size",
+                    description = "Used for responses from the model.",
+                    fontSize = uiState.responseFontSize,
+                    onFontSizeChanged = { fontSize ->
+                        viewModel.onUiEvent(SettingsUiEvent.OnUpdateResponseFontSize(fontSize))
+                    }
+                )
+            }
+
+            HorizontalDivider(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 16.dp)
+            )
+
+            SettingsSection(
+                title = "Theme Configuration",
+                icon = Icons.Filled.InvertColors
+            ) {
+                ThemeSelectionSetting(
+                    modifier = Modifier.fillMaxWidth(),
+                    selectedThemeType = uiState.themeType,
+                    onUpdateThemeType = { newThemeType ->
+                        viewModel.onUiEvent(SettingsUiEvent.OnUpdateThemeType(newThemeType))
+                    }
+                )
+            }
+        }
+
+        ModelSelectionSheet(
+            isVisible = uiState.showModelSelectionSheet,
+            isFetchingModels = uiState.isFetchingModels,
+            fetchModels = {
+                viewModel.onUiEvent(SettingsUiEvent.OnFetchModels)
+            },
+            models = uiState.models,
+            selectedModel = uiState.selectedModel,
+            onModelSelected = { model ->
+                viewModel.onUiEvent(SettingsUiEvent.OnModelSelected(model))
+            },
+            onDismiss = {
+                viewModel.onUiEvent(SettingsUiEvent.OnDismissModelSelectionSheet)
+            }
+        )
+    }
+}
+
+@Composable
+private fun SettingsSection(
+    title: String,
+    icon: ImageVector,
+    content: @Composable () -> Unit
+) {
+    Column(
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = AiyoTheme.colors.primary,
+                modifier = Modifier.size(24.dp)
+            )
+            Text(
+                text = title,
+                style = LocalTypography.current.h3
+            )
+        }
+        Spacer(modifier = Modifier.height(16.dp))
+        content()
+    }
+}
+
+@Composable
+private fun FontSizeSetting(
+    label: String,
+    description: String,
+    fontSize: Int,
+    onFontSizeChanged: (Int) -> Unit
+) {
+    Column(
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = label,
+                    style = LocalTypography.current.body1
+                )
+                Text(
+                    text = description,
+                    color = AiyoTheme.colors.textSecondary,
+                    style = AiyoTheme.typography.body3
+                )
+            }
+            Text(
+                text = "$fontSize sp",
+                color = AiyoTheme.colors.textSecondary,
+                style = LocalTypography.current.label1
+            )
+        }
+        Slider(
+            value = fontSize.toFloat(),
+            onValueChange = { value -> onFontSizeChanged(value.roundToInt()) },
+            valueRange = SettingRepository.MIN_FONT_SIZE.toFloat()..SettingRepository.MAX_FONT_SIZE.toFloat(),
+            steps = SettingRepository.MAX_FONT_SIZE - SettingRepository.MIN_FONT_SIZE - 1
+        )
+        Text(
+            text = "The quick brown fox jumps over the lazy dog.",
+            style = LocalTypography.current.body1.copy(
+                fontSize = fontSize.sp,
+                lineHeight = (fontSize + 8).sp
+            )
+        )
+    }
+}
+
+@Composable
+private fun ModelSelectionSetting(
+    selectedModel: Model,
+    onShowModelSheet: () -> Unit
+) {
+    Column(
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column {
+                Text(
+                    text = "Default Model",
+                    style = LocalTypography.current.body1
+                )
+                Text(
+                    text = "Requires app restart to apply change.",
+                    color = AiyoTheme.colors.textSecondary,
+                    style = AiyoTheme.typography.body3
+                )
+            }
+            com.beradeep.aiyo.ui.screens.chat.components.ModelSelectorChip(selectedModel, onShowModelSheet)
+        }
+        Spacer(modifier = Modifier.height(8.dp))
+    }
+}
+
+@Composable
+fun ThemeSelectionSetting(
+    modifier: Modifier = Modifier,
+    isDarkModeOn: Boolean = isSystemInDarkTheme(),
+    selectedThemeType: ThemeType,
+    onUpdateThemeType: (ThemeType) -> Unit
+) {
+    val colors by remember(selectedThemeType) {
+        derivedStateOf {
+            when (selectedThemeType) {
+                ThemeType.Light -> LightColors
+                ThemeType.Dark -> DarkColors
+                ThemeType.System -> if (isDarkModeOn) DarkColors else LightColors
+            }
+        }
+    }
+    LocalColors.current.value = colors
+    SingleChoiceSegmentedButtonRow(modifier) {
+        ThemeType.entries.forEach { themeType ->
+            SegmentedButton(
+                selected = themeType == selectedThemeType,
+                onClick = { onUpdateThemeType(themeType) },
+                shape = SegmentedButtonDefaults.itemShape(
+                    index = themeType.ordinal,
+                    count = ThemeType.entries.size,
+                    baseShape = RoundedCornerShape(8.dp)
+                ),
+                colors = SegmentedButtonDefaults.colors(
+                    activeContainerColor = AiyoTheme.colors.primary,
+                    activeContentColor = AiyoTheme.colors.onPrimary,
+                    inactiveContainerColor = AiyoTheme.colors.surface,
+                    inactiveContentColor = AiyoTheme.colors.onSurface
+                )
+            ) {
+                androidx.compose.material3.Text(
+                    text = themeType.name,
+                    style = MaterialTheme.typography.bodyMedium
+                )
+            }
+        }
+    }
