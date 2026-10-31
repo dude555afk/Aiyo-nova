@@ -20,8 +20,6 @@ import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.filled.FormatSize
 import androidx.compose.material.icons.filled.InvertColors
 import androidx.compose.material.icons.filled.ModelTraining
-import androidx.compose.material.icons.rounded.Visibility
-import androidx.compose.material.icons.rounded.VisibilityOff
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
@@ -29,7 +27,6 @@ import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -37,8 +34,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalFocusManager
-import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -57,8 +52,8 @@ import com.beradeep.aiyo.ui.basics.components.IconButtonVariant
 import com.beradeep.aiyo.ui.basics.components.Scaffold
 import com.beradeep.aiyo.ui.basics.components.Slider
 import com.beradeep.aiyo.ui.basics.components.Text
-import com.beradeep.aiyo.ui.basics.components.textfield.OutlinedTextField
 import com.beradeep.aiyo.ui.basics.components.topbar.TopBar
+import com.beradeep.aiyo.ui.screens.chat.components.ModelSelectorChip
 import com.beradeep.aiyo.ui.screens.components.ModelSelectionSheet
 import kotlin.math.roundToInt
 
@@ -108,13 +103,6 @@ fun SettingsScreen(
                     }
                 }
         ) {
-
-            HorizontalDivider(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 16.dp)
-            )
-
             SettingsSection(
                 title = "Model Configuration",
                 icon = Icons.Filled.ModelTraining
@@ -296,7 +284,7 @@ private fun ModelSelectionSetting(
                     style = AiyoTheme.typography.body3
                 )
             }
-            com.beradeep.aiyo.ui.screens.chat.components.ModelSelectorChip(selectedModel, onShowModelSheet)
+            ModelSelectorChip(selectedModel, onShowModelSheet)
         }
         Spacer(modifier = Modifier.height(8.dp))
     }
@@ -343,3 +331,4 @@ fun ThemeSelectionSetting(
             }
         }
     }
+}
