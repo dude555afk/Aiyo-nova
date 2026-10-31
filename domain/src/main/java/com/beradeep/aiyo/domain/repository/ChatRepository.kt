@@ -29,7 +29,7 @@ interface ChatRepository {
 
     suspend fun createConversation(
         title: String,
-        model: Model = Model("openrouter/auto"),
+        model: Model = Model("anthropic/claude-sonnet-4.5"),
         isStarred: Boolean = false
     ): Conversation
 
