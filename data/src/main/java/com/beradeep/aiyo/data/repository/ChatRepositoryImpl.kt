@@ -79,9 +79,7 @@ class ChatRepositoryImpl(
     } ?: Result.failure(IllegalStateException("OpenAI client not initialized"))
 
     override suspend fun getConversations(): List<Conversation> =
-        conversationDao.getAllConversations().map {
-            it.toDomain()
-        }
+        conversationDao.getAllConversations().map { it.toDomain() }
 
     override fun getConversationsFlow(): Flow<List<Conversation>> {
         return conversationDao.getAllConversationsFlow()
