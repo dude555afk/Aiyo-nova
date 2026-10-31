@@ -15,13 +15,13 @@ android {
         applicationId = "com.beradeep.aiyo"
         minSdk = 24
         targetSdk = 36
-        versionCode = 1
-        versionName = "1.0.0"
+        versionCode = 2
+        versionName = "1.0.1"
     }
 
     signingConfigs {
         create("githubRelease") {
-            storeFile = file(System.getenv("SIGNING_KEYSTORE_PATH") ?: "aiyo.jks")
+            storeFile = file(System.getenv("SIGNING_KEYSTORE_PATH") ?: "release.keystore")
             storePassword = System.getenv("SIGNING_STORE_PASSWORD")
             keyAlias = System.getenv("SIGNING_KEY_ALIAS")
             keyPassword = System.getenv("SIGNING_KEY_PASSWORD")
