@@ -3,13 +3,10 @@ package com.beradeep.aiyo.nav
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.navigation3.runtime.NavKey
-import androidx.navigation3.runtime.rememberNavKey
 import androidx.navigation3.ui.NavHost
 import androidx.navigation3.ui.rememberNavController
 import com.beradeep.aiyo.ui.screens.chat.ChatScreen
 import com.beradeep.aiyo.ui.screens.settings.SettingsScreen
-import com.beradeep.aiyo.ui.screens.chat.ChatViewModel
-import com.beradeep.aiyo.ui.screens.settings.SettingsViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 
 sealed interface Screen : NavKey {
@@ -19,7 +16,7 @@ sealed interface Screen : NavKey {
 
 @Composable
 fun AiyoNavHost(modifier: Modifier = Modifier) {
-    val navController = rememberNav Controller()
+    val navController = rememberNavController()
     val chatViewModel: ChatViewModel = hiltViewModel()
     val settingsViewModel: SettingsViewModel = hiltViewModel()
 
