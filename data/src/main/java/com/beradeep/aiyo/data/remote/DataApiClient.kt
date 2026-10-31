@@ -1,7 +1,6 @@
 package com.beradeep.aiyo.data.remote
 
 import com.aallam.openai.client.OpenAI
-import com.aallam.openai.client.OpenAIHost
 import com.beradeep.aiyo.domain.ApiClient
 
 interface DataApiClient : ApiClient {
