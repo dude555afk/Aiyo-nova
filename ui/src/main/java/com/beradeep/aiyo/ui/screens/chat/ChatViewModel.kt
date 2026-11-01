@@ -9,6 +9,7 @@ import androidx.lifecycle.viewModelScope
 import com.beradeep.aiyo.domain.ApiClient
 import com.beradeep.aiyo.domain.model.Conversation
 import com.beradeep.aiyo.domain.model.Message
+import com.beradeep.aiyo.domain.model.MessageAttachment
 import com.beradeep.aiyo.domain.model.Model
 import com.beradeep.aiyo.domain.model.Role
 import com.beradeep.aiyo.domain.repository.ChatRepository
@@ -91,6 +92,9 @@ open class ChatViewModel(
                 it.copy(isWebSearchEnabled = !it.isWebSearchEnabled)
             }
 
+            is ChatUiEvent.OnAttachmentsSelected -> addAttachments(chatUiEvent.attachments)
+            is ChatUiEvent.OnAttachmentRemoved -> removeAttachment(chatUiEvent.uri)
+
             is ChatUiEvent.OnReason -> _uiState.update {
                 it.copy(reasoningEffort = chatUiEvent.reason)
             }
@@ -154,29 +158,42 @@ open class ChatViewModel(
     }
 
     private suspend fun sendMessage() {
-        val text = uiState.value.inputText
-        val isLoadingResponse = uiState.value.isLoadingResponse
-        if (text.isEmpty() || isLoadingResponse) return
+        val state = uiState.value
+        val text = state.inputText.trim()
+        val attachments = state.pendingAttachments
+        if ((text.isEmpty() && attachments.isEmpty()) || state.isLoadingResponse) return
 
-        if (uiState.value.selectedConversation == null) {
+        if (state.selectedConversation == null) {
             createNewConversation()
         }
 
-        val message = Message(UUID.randomUUID(), Role.User, text)
+        val displayContent = buildString {
+            append(text.ifBlank { "Please analyze the attached file(s)." })
+            if (attachments.isNotEmpty()) {
+                append("\n\n")
+                append(attachments.joinToString("\n") { "📎 " + it.name })
+            }
+        }
+        val message = Message(UUID.randomUUID(), Role.User, displayContent, attachments)
         messages.add(message.toUiMessage())
-        _uiState.update { it.copy(isLoadingResponse = true) }
+        _uiState.update {
+            it.copy(
+                inputText = "",
+                pendingAttachments = emptyList(),
+                isLoadingResponse = true
+            )
+        }
         saveMessage(message)
 
-        _uiState.update { it.copy(inputText = "", isLoadingResponse = true) }
         responseJob = viewModelScope.launch {
-            // OpenRouter's :online suffix is not a Kilo Gateway model ID.
-            // Keep the selected Kilo model unchanged; web search needs a separate tool integration.
             val model = uiState.value.selectedModel
-            val result =
-                chatRepository.getChatCompletionFlow(
-                    model = model,
-                    messages = messages.map(UiMessage::toMessage)
-                )
+            val useWebSearch = state.isWebSearchEnabled || shouldAutoSearchWeb(text)
+            val result = chatRepository.getChatCompletionFlow(
+                model = model,
+                messages = messages.map(UiMessage::toMessage),
+                reason = state.reasoningEffort,
+                webSearch = useWebSearch
+            )
 
             result
                 .onSuccess { chunkFlow ->
@@ -184,10 +201,13 @@ open class ChatViewModel(
                     chunkFlow
                         .onCompletion {
                             _uiState.update { it.copy(streamingResponse = null) }
-                            val message =
-                                Message(UUID.randomUUID(), Role.Assistant, response.toString())
-                            messages.add(message.toUiMessage())
-                            saveMessage(message)
+                            val assistantMessage = Message(
+                                UUID.randomUUID(),
+                                Role.Assistant,
+                                response.toString()
+                            )
+                            messages.add(assistantMessage.toUiMessage())
+                            saveMessage(assistantMessage)
                             preloadMarkdownForIndex(messages.lastIndex)
                         }
                         .collect { chunk ->
@@ -202,10 +222,10 @@ open class ChatViewModel(
                             }
                         }
                 }.onFailure { error ->
-                    val content = "_${error.message ?: "_Oops. An unknown error occurred."}_"
-                    val message = Message(UUID.randomUUID(), Role.System, content)
-                    messages.add(message.toUiMessage())
-                    saveMessage(message)
+                    val content = "_" + (error.message ?: "Oops. An unknown error occurred.") + "_"
+                    val errorMessage = Message(UUID.randomUUID(), Role.System, content)
+                    messages.add(errorMessage.toUiMessage())
+                    saveMessage(errorMessage)
                     preloadMarkdownForIndex(messages.lastIndex)
                 }
             _uiState.update { it.copy(streamingResponse = null, isLoadingResponse = false) }
@@ -213,6 +233,33 @@ open class ChatViewModel(
         }
         responseJob?.join()
         responseJob = null
+    }
+
+    private fun addAttachments(selected: List<MessageAttachment>) {
+        _uiState.update { state ->
+            val merged = (state.pendingAttachments + selected)
+                .distinctBy { it.uri }
+                .take(MAX_ATTACHMENTS)
+            state.copy(
+                pendingAttachments = merged,
+                inputText = if (state.inputText.isBlank() && merged.isNotEmpty()) {
+                    "Please analyze the attached file(s)."
+                } else {
+                    state.inputText
+                }
+            )
+        }
+    }
+
+    private fun removeAttachment(uri: String) {
+        _uiState.update { state ->
+            val remaining = state.pendingAttachments.filterNot { it.uri == uri }
+            val defaultPrompt = "Please analyze the attached file(s)."
+            state.copy(
+                pendingAttachments = remaining,
+                inputText = if (remaining.isEmpty() && state.inputText == defaultPrompt) "" else state.inputText
+            )
+        }
     }
 
     private suspend fun aiUpdateConversationTitle() {
@@ -279,7 +326,7 @@ open class ChatViewModel(
     }
 
     private fun newChat() {
-        _uiState.update { it.copy(selectedConversation = null, selectedModel = defaultModel) }
+        _uiState.update { it.copy(selectedConversation = null, selectedModel = defaultModel, pendingAttachments = emptyList()) }
         messages.clear()
     }
 
@@ -298,7 +345,8 @@ open class ChatViewModel(
         _uiState.update {
             it.copy(
                 selectedConversation = conversation,
-                selectedModel = conversation.selectedModel
+                selectedModel = conversation.selectedModel,
+                pendingAttachments = emptyList()
             )
         }
         messages.clear()
@@ -345,3 +393,17 @@ open class ChatViewModel(
         preloadJobs.clear()
     }
 }
+
+private fun shouldAutoSearchWeb(query: String): Boolean {
+    val lower = query.lowercase()
+    val freshnessSignals = listOf(
+        "latest", "current", "today", "right now", "this week", "this month",
+        "yesterday", "tomorrow", "recent", "news", "price", "cost", "weather",
+        "forecast", "score", "standings", "schedule", "release date", "new version",
+        "latest version", "updated", "update"
+    )
+    return freshnessSignals.any { lower.contains(it) } ||
+        Regex("\\b20[2-9][0-9]\\b").containsMatchIn(query)
+}
+
+private const val MAX_ATTACHMENTS = 5

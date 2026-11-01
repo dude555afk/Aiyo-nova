@@ -2,6 +2,7 @@ package com.beradeep.aiyo.ui.screens.chat
 
 import com.beradeep.aiyo.domain.model.Conversation
 import com.beradeep.aiyo.domain.model.Model
+import com.beradeep.aiyo.domain.model.MessageAttachment
 import com.beradeep.aiyo.domain.model.Reason
 
 sealed interface ChatUiEvent {
@@ -22,6 +23,10 @@ sealed interface ChatUiEvent {
     data class OnConversationSelected(val conversation: Conversation) : ChatUiEvent
 
     data object OnWebSearchTapped : ChatUiEvent
+
+    data class OnAttachmentsSelected(val attachments: List<MessageAttachment>) : ChatUiEvent
+
+    data class OnAttachmentRemoved(val uri: String) : ChatUiEvent
 
     data class OnUpdateConversation(val conversation: Conversation) : ChatUiEvent
 
