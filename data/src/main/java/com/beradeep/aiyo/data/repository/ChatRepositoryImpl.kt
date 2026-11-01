@@ -188,7 +188,7 @@ class ChatRepositoryImpl(
             val targetUrl = parsed.getQueryParameter("uddg") ?: href
             if (!targetUrl.startsWith("https://") && !targetUrl.startsWith("http://")) return@mapIndexedNotNull null
             val title = htmlText(match.groupValues[2]).take(180)
-            if (title.isBlank()) return@mapNotNull null
+            if (title.isBlank()) return@mapIndexedNotNull null
             WebSearchResult(
                 title = title,
                 url = targetUrl,
