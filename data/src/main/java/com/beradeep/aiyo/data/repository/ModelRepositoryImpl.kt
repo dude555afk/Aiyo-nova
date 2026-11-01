@@ -19,23 +19,22 @@ class ModelRepositoryImpl(context: Context, val apiClient: DataApiClient) : Mode
     private val kvStore by lazy { KVStore.getInstance(context) }
     private val json = Json { ignoreUnknownKeys = true }
     private val httpClient = OkHttpClient()
-    private val openAi get() = apiClient.openAI
 
     override suspend fun getModels(): Result<List<Model>> = withContext(Dispatchers.IO) {
         runCatching {
             val request = Request.Builder()
-                .url("${DataApiClient.BASE_URL}/models")
+                .url(DataApiClient.BASE_URL + "models")
                 .get()
                 .build()
 
             val availableFreeModels = httpClient.newCall(request).execute().use { response ->
                 check(response.isSuccessful) {
-                    "Kilo model catalog request failed: HTTP ${response.code}"
+                    "Kilo model catalogue request failed: HTTP ${response.code}"
                 }
                 val payload = response.body?.string()
-                    ?: error("Kilo returned an empty model catalog")
+                    ?: error("Kilo returned an empty model catalogue")
                 val data = JSONObject(payload).optJSONArray("data")
-                    ?: error("Kilo returned an invalid model catalog")
+                    ?: error("Kilo returned an invalid model catalogue")
 
                 buildList {
                     for (index in 0 until data.length()) {
