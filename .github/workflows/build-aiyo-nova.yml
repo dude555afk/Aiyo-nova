@@ -1,9 +1,7 @@
 name: Build and release Aiyo Nova
-
 on:
   push:
-    branches:
-      - main
+    branches: [main]
     paths:
       - '.github/workflows/build-aiyo-nova.yml'
       - 'app/**'
@@ -12,96 +10,68 @@ on:
       - 'ui/**'
       - 'README.md'
   workflow_dispatch:
-
 permissions:
   contents: write
-
 concurrency:
   group: aiyo-nova-release
   cancel-in-progress: false
-
 jobs:
   build-release:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Aiyo Nova changes
         uses: actions/checkout@v4
-
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: '17'
-
       - name: Set up Gradle 8.13
         uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.13'
-
       - name: Assemble complete Aiyo Nova source tree
         run: |
           set -euo pipefail
-          # Aiyo Nova began as a partial source snapshot. Restore the complete
-          # Apache-2.0 upstream project at a pinned commit, then overlay Nova's
-          # committed data/domain/UI implementation.
           git clone --no-checkout https://github.com/beradeep/aiyo.git source
           git -C source checkout --detach fff8f5052a841961f8a61255da1337ea0bf90b47
-
           for module in data domain ui; do
             mkdir -p "source/$module/src"
             cp -a "$GITHUB_WORKSPACE/$module/src/." "source/$module/src/"
           done
-
-          # Nova uses the upstream Android shell with Nova's Hilt wiring and app label.
           DI_DIR="source/app/src/main/java/com/beradeep/aiyo/di"
           mkdir -p "$DI_DIR"
           cp "$GITHUB_WORKSPACE/app/src/main/java/com/beradeep/aiyo/di/ApiModule.kt" "$DI_DIR/ApiModule.kt"
           cp "$GITHUB_WORKSPACE/app/src/main/java/com/beradeep/aiyo/di/RepositoryModule.kt" "$DI_DIR/RepositoryModule.kt"
           cp "$GITHUB_WORKSPACE/app/src/main/java/com/beradeep/aiyo/di/VmModule.kt" "$DI_DIR/VmModule.kt"
           cp "$GITHUB_WORKSPACE/app/src/main/res/values/strings.xml" "source/app/src/main/res/values/strings.xml"
-
-          # Nova's API client configures Ktor directly and the model catalogue
-          # uses OkHttp, so both must be on the compile classpath.
           python3 - <<'PY'
           from pathlib import Path
           import re
-
           p = Path("source/data/build.gradle.kts")
           text = p.read_text()
-          text = text.replace(
-              "runtimeOnly(libs.ktor.client.okhttp)",
-              "implementation(libs.ktor.client.okhttp)\n    implementation(libs.okhttp)"
-          )
-          if "implementation(libs.okhttp)" not in text:
+          text, count = re.subn(r"runtimeOnly\(libs\.ktor\.client\.okhttp\)", "implementation(libs.ktor.client.okhttp)\n    implementation(libs.okhttp)", text, count=1)
+          if count != 1:
               raise SystemExit("Could not add Kilo networking dependencies")
-
-          # The OpenAI client brings OkHttp SSE transitively. Align all OkHttp
-          # artifacts to avoid mixing SSE and core versions during R8 shrinking.
-          marker = 'dependencies {\n    implementation(project(":domain"))'
-          aligned = 'dependencies {\n    implementation(platform("com.squareup.okhttp3:okhttp-bom:5.1.0"))\n    implementation(project(":domain"))'
-          if marker in text:
-              text = text.replace(marker, aligned, 1)
-          elif 'okhttp-bom:5.1.0' not in text:
-              raise SystemExit("Could not align OkHttp artifacts")
+          if "okhttp-bom:5.1.0" not in text:
+              text, count = re.subn(r"(?m)^dependencies\s*\{", 'dependencies {\n    implementation(platform("com.squareup.okhttp3:okhttp-bom:5.1.0"))', text, count=1)
+              if count != 1:
+                  raise SystemExit("Could not insert OkHttp BOM")
           p.write_text(text)
-
-          # Aiyo Nova release version, keeping the upstream application id.
           p = Path("source/app/build.gradle.kts")
           text = p.read_text()
-          text, code_count = re.subn(r"versionCode\s*=\s*\d+", "versionCode = 11", text, count=1)
-          text, name_count = re.subn(r'versionName\s*=\s*"[^"]+"', 'versionName = "1.1.0"', text, count=1)
-          if code_count != 1 or name_count != 1:
+          text, a = re.subn(r"versionCode\s*=\s*\d+", "versionCode = 11", text, count=1)
+          text, b = re.subn(r'versionName\s*=\s*"[^"]+"', 'versionName = "1.1.0"', text, count=1)
+          if a != 1 or b != 1:
               raise SystemExit("Could not set Aiyo Nova version")
           p.write_text(text)
           PY
-
       - name: Generate release signing key
         working-directory: source/app
         run: |
           keytool -genkeypair -keystore aiyo-nova.jks -storepass android -keypass android \
             -alias aiyo-nova -keyalg RSA -keysize 2048 -validity 10000 \
             -dname 'CN=Aiyo Nova, OU=Android, O=Aiyo Nova, L=Internet, ST=Internet, C=US'
-
       - name: Build Aiyo Nova release APK
         working-directory: source
         env:
@@ -112,14 +82,10 @@ jobs:
         run: |
           gradle :app:assembleGithubRelease --no-daemon --stacktrace
           test -s app/build/outputs/apk/githubRelease/app-githubRelease.apk
-
       - name: Publish APK
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           APK="source/app/build/outputs/apk/githubRelease/app-githubRelease.apk"
           TAG="aiyo-nova-1.1.0-${GITHUB_RUN_NUMBER}"
-          gh release create "$TAG" "$APK" \
-            --repo "$GITHUB_REPOSITORY" \
-            --title "Aiyo Nova 1.1.0" \
-            --notes "Aiyo Nova 1.1.0. Uses unauthenticated Kilo AI Gateway free-model access. Built from the pinned Aiyo upstream source with the Nova app code overlaid."
+          gh release create "$TAG" "$APK" --repo "$GITHUB_REPOSITORY" --title "Aiyo Nova 1.1.0" --notes "Aiyo Nova 1.1.0. Uses unauthenticated Kilo AI Gateway free-model access."
