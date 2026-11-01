@@ -1,42 +1,49 @@
 # Aiyo Nova
 
-Aiyo is a privacy-respecting, high-performance AI chat application for Android that uses **Kilo.ai's anonymous gateway** instead of requiring your own API key.
+Aiyo Nova is an Android AI chat app based on [Aiyo](https://github.com/beradeep/aiyo), configured to use the **Kilo AI Gateway's anonymous free-model access**.
 
-## Key Features
+## Kilo anonymous gateway
 
-* **No API Key Required** - Uses Kilo.ai's free anonymous gateway, no OpenRouter key needed
-* **Multi-Model Support** - Access hundreds of models via Kilo.ai gateway
-* **Privacy First** - No data collection; all chat histories stored locally on device
-* **Modern UI** - Built with Jetpack Compose and a custom design system
-* **Streaming Responses** - Real-time streaming of AI responses
-* **Web Search** - Native web search support
-* **Reasoning Effort** - Control model reasoning levels (None, Low, Medium, High)
+- No OpenRouter account or API key is required.
+- Chat requests are sent to `https://ai-gateway.kilo.ai/api/v1`.
+- Requests omit the `Authorization` header entirely.
+- The model picker includes Kilo's `kilo-auto/free` router and models marked `:free` in Kilo's public model catalog.
+- Kilo documents anonymous free-model rate limiting at 200 requests per hour per IP. Availability and model limits can change.
 
-## Tech Stack
+Anonymous access is only for free models. Paid models require a Kilo API key and are intentionally not exposed in this build.
 
-* Kotlin, Jetpack Compose
-* Clean Architecture + MVVM
-* Hilt (Dependency Injection)
-* Room (Local Database)
-* MMKV (Key-Value Storage)
-* OpenAI Kotlin SDK (configured for Kilo.ai gateway)
+## Privacy
 
-## Getting Started
+Conversation history is stored locally on the device. Prompts sent for inference are processed by Kilo and the selected upstream inference provider; do not send confidential information unless you have reviewed their data-handling terms.
 
-1. Clone the repo
-2. Open in Android Studio Ladybug or newer
-3. Sync Gradle and run on device/emulator (API 24+)
-4. Start chatting - no API key setup needed!
+## Features
 
-## Architecture
+- Jetpack Compose interface
+- Streaming chat responses
+- Multiple free Kilo models
+- Local conversation history
+- Reasoning effort controls
+- Theme and typography settings
 
-The app follows Clean Architecture with four modules:
+OpenRouter-specific `:online` model routing is not used. A separate web-search tool integration is required for web search.
 
-* `:app` - Entry point, Hilt DI, navigation
-* `:ui` - Compose screens, ViewModels, design system
-* `:domain` - Business logic, repository interfaces, models
-* `:data` - Repository implementations, Room DB, networking
+## Tech stack
+
+- Kotlin and Jetpack Compose
+- Clean Architecture and MVVM
+- Hilt dependency injection
+- Room local database
+- MMKV key-value storage
+- OpenAI Kotlin SDK with Kilo Gateway-compatible requests
+
+## Build
+
+1. Open the project in Android Studio.
+2. Sync Gradle.
+3. Run the `:app` configuration on Android API 24 or newer.
+
+GitHub Actions builds the Aiyo Nova source in this repository and publishes an APK release.
 
 ## License
 
-Apache License 2.0
+Apache License 2.0. See the upstream project for attribution and license details.

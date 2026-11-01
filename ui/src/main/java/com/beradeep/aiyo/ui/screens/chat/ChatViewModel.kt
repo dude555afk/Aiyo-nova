@@ -169,9 +169,9 @@ open class ChatViewModel(
 
         _uiState.update { it.copy(inputText = "", isLoadingResponse = true) }
         responseJob = viewModelScope.launch {
-            val model =
-                uiState.value.selectedModel.takeIf { !uiState.value.isWebSearchEnabled }
-                    ?: uiState.value.selectedModel.copy(id = uiState.value.selectedModel.id + ":online")
+            // OpenRouter's :online suffix is not a Kilo Gateway model ID.
+            // Keep the selected Kilo model unchanged; web search needs a separate tool integration.
+            val model = uiState.value.selectedModel
             val result =
                 chatRepository.getChatCompletionFlow(
                     model = model,

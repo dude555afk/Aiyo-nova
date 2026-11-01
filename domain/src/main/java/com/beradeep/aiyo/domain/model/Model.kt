@@ -6,7 +6,7 @@ data class Model(
     val createdAt: java.util.Date? = null
 ) {
     override fun equals(other: Any?): Boolean {
-        return this.id == (other as Model).id
+        return other is Model && this.id == other.id
     }
 
     override fun hashCode(): Int {
@@ -14,6 +14,7 @@ data class Model(
     }
 
     companion object {
-        val defaultModel = Model("anthropic/claude-sonnet-4.5")
+        // Kilo's virtual router selects an available free model for each session.
+        val defaultModel = Model("kilo-auto/free")
     }
 }
