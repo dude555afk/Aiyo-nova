@@ -14,7 +14,7 @@ data class Model(
     }
 
     companion object {
-        // Kilo's virtual router selects an available free model for each session.
-        val defaultModel = Model("kilo-auto/free")
+        // OpenRouter routes to the best currently available free model.
+        val defaultModel = Model("openrouter/free")
     }
 }
