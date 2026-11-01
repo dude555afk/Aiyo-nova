@@ -1,0 +1,23 @@
+name: Restore Aiyo Nova from upstream
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  restore:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Clone the known-good upstream source
+        run: |
+          git clone --depth=1 https://github.com/beradeep/aiyo.git upstream
+          cd upstream
+          git config user.name "Aiyo Nova repair bot"
+          git config user.email "actions@github.com"
+          git checkout -b restored
+          git remote add target "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git"
+          git push target restored:main --force
+      - name: Summary
+        run: echo "The main branch has been restored from beradeep/aiyo. Next, apply the Kilo gateway patch and build a release from the restored project."
