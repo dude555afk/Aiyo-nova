@@ -84,6 +84,11 @@ jobs:
           if app_id_count != 1 or a != 1 or b != 1:
               raise SystemExit("Could not set Aiyo Nova application ID/version")
           p.write_text(text)
+          proguard = Path("source/app/proguard-rules.pro")
+          rules = proguard.read_text()
+          optional_jp2_rule = "-dontwarn com.gemalto.jp2.JP2Decoder"
+          if optional_jp2_rule not in rules:
+              proguard.write_text(rules.rstrip() + "\\n\\n# PDFBox's optional JPEG-2000 decoder is not used for text extraction.\\n" + optional_jp2_rule + "\\n")
           PY
       - name: Generate release signing key
         working-directory: source/app
