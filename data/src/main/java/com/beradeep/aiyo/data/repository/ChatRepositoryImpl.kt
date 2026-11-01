@@ -31,12 +31,12 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
 import okhttp3.Request
-import org.json.JSONArray
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.io.IOException
@@ -172,16 +172,16 @@ class ChatRepositoryImpl(
             response.body?.string().orEmpty()
         }
 
-        val links = Regex(
+        val linkMatches = Regex(
             """<a(?=[^>]*class=["'][^"']*result__a[^"']*["'])[^>]*href=["']([^"']+)["'][^>]*>(.*?)</a>""",
             setOf(RegexOption.IGNORE_CASE, RegexOption.DOT_MATCHES_ALL)
-        ).findAll(html)
+        ).findAll(html).toList()
         val snippets = Regex(
             """<(?:a|div)[^>]*class=["'][^"']*result__snippet[^"']*["'][^>]*>(.*?)</(?:a|div)>""",
             setOf(RegexOption.IGNORE_CASE, RegexOption.DOT_MATCHES_ALL)
         ).findAll(html).map { htmlText(it.groupValues[1]) }.toList()
 
-        return links.mapNotNull { match ->
+        return linkMatches.mapIndexedNotNull { index, match ->
             val rawHref = match.groupValues[1]
             val href = if (rawHref.startsWith("//")) "https:" + rawHref else rawHref
             val parsed = Uri.parse(href)
@@ -192,7 +192,7 @@ class ChatRepositoryImpl(
             WebSearchResult(
                 title = title,
                 url = targetUrl,
-                snippet = snippets.getOrNull(links.takeWhile { it != match }.count()).orEmpty().take(600)
+                snippet = snippets.getOrNull(index).orEmpty().take(600)
             )
         }.distinctBy { it.url }.take(5)
     }
@@ -205,7 +205,7 @@ class ChatRepositoryImpl(
             .trim()
     }
 
-    private suspend fun Message.toApiMessage(): ChatMessage {
+    private fun Message.toApiMessage(): ChatMessage {
         if (attachments.isEmpty()) {
             return ChatMessage(role = role.toChatRole(), content = content)
         }
