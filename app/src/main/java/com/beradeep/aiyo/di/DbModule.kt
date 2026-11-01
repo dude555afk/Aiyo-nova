@@ -1,5 +1,6 @@
 package com.beradeep.aiyo.di
 
+import android.content.Context
 import androidx.room.Room
 import com.beradeep.aiyo.data.local.db.AiyoDatabase
 import dagger.Module
@@ -20,17 +21,5 @@ object DbModule {
             AiyoDatabase::class.java,
             AiyoDatabase.DB_NAME
         ).addMigrations(*AiyoDatabase.migrations()).build()
-    }
-
-    @Provides
-    @Singleton
-    fun provideConversationDao(database: AiyoDatabase): ConversationDao {
-        return database.conversationDao()
-    }
-
-    @Provides
-    @Singleton
-    fun provideMessageDao(database: AiyoDatabase): MessageDao {
-        return database.messageDao()
     }
 }

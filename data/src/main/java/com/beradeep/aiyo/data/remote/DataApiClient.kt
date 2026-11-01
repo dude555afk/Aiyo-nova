@@ -7,6 +7,6 @@ interface DataApiClient : ApiClient {
     val openAI: OpenAI?
 
     companion object {
-        const val BASE_URL = "https://ai-gateway.kilo.ai/api/v1"
+        const val BASE_URL = "https://ai-gateway.kilo.ai/api/v1/"
     }
 }
