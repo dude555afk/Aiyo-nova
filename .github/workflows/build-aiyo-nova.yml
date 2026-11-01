@@ -88,7 +88,7 @@ jobs:
           rules = proguard.read_text()
           optional_jp2_rule = "-dontwarn com.gemalto.jp2.JP2Decoder"
           if optional_jp2_rule not in rules:
-              proguard.write_text(rules.rstrip() + "\\n\\n# PDFBox's optional JPEG-2000 decoder is not used for text extraction.\\n" + optional_jp2_rule + "\\n")
+              proguard.write_text(rules.rstrip() + "\n\n# PDFBox's optional JPEG-2000 decoder is not used for text extraction.\n" + optional_jp2_rule + "\n")
           PY
       - name: Generate release signing key
         working-directory: source/app
