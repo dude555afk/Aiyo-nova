@@ -74,6 +74,15 @@ jobs:
           )
           if "implementation(libs.okhttp)" not in text:
               raise SystemExit("Could not add Kilo networking dependencies")
+
+          # The OpenAI client brings OkHttp SSE transitively. Align all OkHttp
+          # artifacts to avoid mixing SSE and core versions during R8 shrinking.
+          marker = 'dependencies {\n    implementation(project(":domain"))'
+          aligned = 'dependencies {\n    implementation(platform("com.squareup.okhttp3:okhttp-bom:5.1.0"))\n    implementation(project(":domain"))'
+          if marker in text:
+              text = text.replace(marker, aligned, 1)
+          elif 'okhttp-bom:5.1.0' not in text:
+              raise SystemExit("Could not align OkHttp artifacts")
           p.write_text(text)
 
           # Aiyo Nova release version, keeping the upstream application id.
