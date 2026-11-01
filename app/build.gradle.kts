@@ -12,7 +12,7 @@ android {
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "com.beradeep.aiyo"
+        applicationId = "com.dude555afk.aiyonova"
         minSdk = 24
         targetSdk = 36
         versionCode = 6
