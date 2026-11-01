@@ -47,10 +47,6 @@ jobs:
           git clone --no-checkout https://github.com/beradeep/aiyo.git source
           git -C source checkout --detach fff8f5052a841961f8a61255da1337ea0bf90b47
 
-          # Nova defines Role alongside Message.kt; remove the upstream standalone
-          # Role.kt to avoid compiling two incompatible Role declarations.
-          rm -f source/domain/src/main/java/com/beradeep/aiyo/domain/model/Role.kt
-
           for module in data domain ui; do
             mkdir -p "source/$module/src"
             cp -a "$GITHUB_WORKSPACE/$module/src/." "source/$module/src/"
