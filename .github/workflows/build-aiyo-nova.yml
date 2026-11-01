@@ -1,0 +1,106 @@
+name: Build Aiyo Nova APK
+
+on:
+  push:
+    paths:
+      - '.github/workflows/build-aiyo-nova.yml'
+      - 'app/build.gradle.kts'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fetch known-good Aiyo source
+        run: git clone --depth=1 --branch master https://github.com/beradeep/aiyo.git source
+
+      - name: Switch source from OpenRouter to Kilo gateway
+        working-directory: source
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          client = Path('data/src/main/java/com/beradeep/aiyo/data/remote/DataApiClient.kt')
+          client.write_text(client.read_text().replace(
+              'https://openrouter.ai/api/v1/',
+              'https://ai-gateway.kilo.ai/api/v1'
+          ))
+
+          api = Path('data/src/main/java/com/beradeep/aiyo/data/remote/ApiClientImpl.kt')
+          api.write_text('''package com.beradeep.aiyo.data.remote
+
+          import com.aallam.openai.api.http.Timeout
+          import com.aallam.openai.client.OpenAI
+          import com.aallam.openai.client.OpenAIHost
+          import kotlin.time.Duration.Companion.seconds
+
+          /** Kilo gateway client. It does not use the app's OpenRouter key. */
+          class ApiClientImpl : DataApiClient {
+              init { load() }
+
+              @Volatile
+              override var openAI: OpenAI? = null
+
+              override fun load() {
+                  synchronized(this) {
+                      openAI = OpenAI(
+                          token = "",
+                          host = OpenAIHost(DataApiClient.BASE_URL),
+                          timeout = Timeout(connect = 30.seconds, socket = 120.seconds)
+                      )
+                  }
+              }
+          }
+          ''')
+
+          keys = Path('data/src/main/java/com/beradeep/aiyo/data/repository/ApiKeyRepositoryImpl.kt')
+          text = keys.read_text()
+          text = text.replace('override fun getApiKey(): String? = kvStore.getEncryptedString(KEY_API)',
+                              'override fun getApiKey(): String? = "anonymous"')
+          keys.write_text(text)
+
+          model = Path('domain/src/main/java/com/beradeep/aiyo/domain/model/Model.kt')
+          model.write_text(model.read_text().replace('Model("openrouter/auto")', 'Model("anthropic/claude-sonnet-4.5")'))
+
+          strings = Path('app/src/main/res/values/strings.xml')
+          strings.write_text(strings.read_text().replace('<string name="app_name">Aiyo</string>', '<string name="app_name">Aiyo Nova</string>'))
+          PY
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Generate signing key
+        working-directory: source
+        run: |
+          keytool -genkeypair -keystore aiyo.jks -storepass android -keypass android \
+            -alias aiyo -keyalg RSA -keysize 2048 -validity 10000 \
+            -dname 'CN=Aiyo Nova, OU=Android, O=Aiyo Nova, L=Internet, ST=Internet, C=US'
+
+      - name: Assemble signed release APK
+        working-directory: source
+        env:
+          SIGNING_KEYSTORE_PATH: aiyo.jks
+          SIGNING_STORE_PASSWORD: android
+          SIGNING_KEY_ALIAS: aiyo
+          SIGNING_KEY_PASSWORD: android
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleGithubRelease --no-daemon --stacktrace
+
+      - name: Publish APK as GitHub release
+        working-directory: source
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG="aiyo-nova-${{ github.run_number }}"
+          gh release create "$TAG" \
+            app/build/outputs/apk/githubRelease/app-githubRelease.apk \
+            --repo "${{ github.repository }}" \
+            --title "Aiyo Nova $TAG" \
+            --notes "Aiyo Nova build using the Kilo gateway backend."

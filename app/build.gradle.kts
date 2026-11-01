@@ -15,13 +15,13 @@ android {
         applicationId = "com.beradeep.aiyo"
         minSdk = 24
         targetSdk = 36
-        versionCode = 5
-        versionName = "1.0.4"
+        versionCode = 6
+        versionName = "1.0.5"
     }
 
     signingConfigs {
         create("githubRelease") {
-            storeFile = file(System.getenv("SIGNING_KEYSTORE_PATH") ?: "release.keystore")
+            storeFile = file(System.getenv("SIGNING_KEYSTORE_PATH") ?: "aiyo.jks")
             storePassword = System.getenv("SIGNING_STORE_PASSWORD")
             keyAlias = System.getenv("SIGNING_KEY_ALIAS")
             keyPassword = System.getenv("SIGNING_KEY_PASSWORD")
@@ -32,14 +32,12 @@ android {
         release {
             isMinifyEnabled = true
             isShrinkResources = true
-            proguardFiles(
-                getDefaultProguardFile("proguard-rules.pro"),
-                "proguard-rules.pro"
-            )
+            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         }
         create("githubRelease") {
             initWith(getByName("release"))
             signingConfig = signingConfigs.getByName("githubRelease")
+            matchingFallbacks += listOf("release")
         }
     }
 
@@ -47,22 +45,14 @@ android {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
-    kotlinOptions {
-        jvmTarget = "11"
-    }
-    buildFeatures {
-        compose = true
-    }
-    composeOptions {
-        kotlinCompilerExtensionVersion = "2.2.10"
-    }
+    kotlinOptions { jvmTarget = "11" }
+    buildFeatures { compose = true }
 }
 
 dependencies {
     implementation(project(":ui"))
     implementation(project(":domain"))
     implementation(project(":data"))
-
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
