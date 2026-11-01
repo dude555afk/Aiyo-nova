@@ -27,7 +27,9 @@ class ModelRepositoryImpl(context: Context, val apiClient: DataApiClient) : Mode
                 .get()
                 .build()
 
-            val availableFreeModels = httpClient.newCall(request).execute().use { response ->
+            // Match Orvia's OpenAI-compatible model discovery: expose every model
+            // returned by the provider instead of applying a local :free-only filter.
+            val availableModels = httpClient.newCall(request).execute().use { response ->
                 check(response.isSuccessful) {
                     "Kilo model catalogue request failed: HTTP ${response.code}"
                 }
@@ -40,21 +42,18 @@ class ModelRepositoryImpl(context: Context, val apiClient: DataApiClient) : Mode
                     for (index in 0 until data.length()) {
                         val item = data.optJSONObject(index) ?: continue
                         val id = item.optString("id").takeIf(String::isNotBlank) ?: continue
-                        // Anonymous Kilo access is restricted to free model IDs.
-                        if (id.endsWith(":free")) {
-                            add(
-                                Model(
-                                    id = id,
-                                    ownedBy = item.optString("owned_by").takeIf(String::isNotBlank)
-                                )
+                        add(
+                            Model(
+                                id = id,
+                                ownedBy = item.optString("owned_by").takeIf(String::isNotBlank)
                             )
-                        }
+                        )
                     }
                 }
             }
 
-            // Kilo's virtual free router tracks changing free-model availability.
-            (listOf(Model.defaultModel) + availableFreeModels)
+            // Keep Kilo's virtual free router available as the safe default.
+            (listOf(Model.defaultModel) + availableModels)
                 .distinctBy(Model::id)
         }
     }

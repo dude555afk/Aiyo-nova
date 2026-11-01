@@ -12,11 +12,11 @@ android {
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "com.beradeep.aiyo"
+        applicationId = "com.dude555afk.aiyonova"
         minSdk = 24
         targetSdk = 36
-        versionCode = 6
-        versionName = "1.0.5"
+        versionCode = 12
+        versionName = "1.1.1"
     }
 
     signingConfigs {
