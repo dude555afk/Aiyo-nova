@@ -44,8 +44,6 @@ jobs:
         with:
           java-version: '17'
           distribution: 'temurin'
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
       - name: Generate keystore
         run: |
           keytool -genkey -v -keystore release.keystore -alias aiyo -keyalg RSA -keysize 2048 -validity 10000 -storepass android -keypass android -dname "CN=,O=,OU=,L=,ST=,C="
@@ -57,7 +55,7 @@ jobs:
           SIGNING_KEY_PASSWORD: android
         run: |
           chmod +x gradlew
-          ./gradlew assembleGithubRelease
+          ./gradlew assembleGithubRelease --no-daemon
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
