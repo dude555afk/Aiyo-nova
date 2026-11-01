@@ -66,6 +66,10 @@ jobs:
               text, count = re.subn(r"(?m)^dependencies\s*\{", 'dependencies {\n    implementation(platform("com.squareup.okhttp3:okhttp-bom:5.1.0"))', text, count=1)
               if count != 1:
                   raise SystemExit("Could not insert OkHttp BOM")
+          if "pdfbox-android" not in text:
+              text, count = re.subn(r"(?m)^dependencies\s*\{", 'dependencies {\n    implementation("com.tom-roush:pdfbox-android:2.0.27.0")', text, count=1)
+              if count != 1:
+                  raise SystemExit("Could not insert PDF text extraction dependency")
           p.write_text(text)
           p = Path("source/app/build.gradle.kts")
           text = p.read_text()
@@ -75,8 +79,8 @@ jobs:
               text,
               count=1,
           )
-          text, a = re.subn(r"versionCode\s*=\s*\d+", "versionCode = 12", text, count=1)
-          text, b = re.subn(r'versionName\s*=\s*"[^"]+"', 'versionName = "1.1.1"', text, count=1)
+          text, a = re.subn(r"versionCode\s*=\s*\d+", "versionCode = 13", text, count=1)
+          text, b = re.subn(r'versionName\s*=\s*"[^"]+"', 'versionName = "1.2.0"', text, count=1)
           if app_id_count != 1 or a != 1 or b != 1:
               raise SystemExit("Could not set Aiyo Nova application ID/version")
           p.write_text(text)
@@ -103,5 +107,5 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           APK="source/app/build/outputs/apk/githubRelease/app-githubRelease.apk"
-          TAG="aiyo-nova-1.1.1-${GITHUB_RUN_NUMBER}"
-          gh release create "$TAG" "$APK" --repo "$GITHUB_REPOSITORY" --title "Aiyo Nova 1.1.1" --notes "Aiyo Nova 1.1.1. Uses unauthenticated Kilo AI Gateway model discovery; paid-model execution may require authorization."
+          TAG="aiyo-nova-1.2.0-${GITHUB_RUN_NUMBER}"
+          gh release create "$TAG" "$APK" --repo "$GITHUB_REPOSITORY" --title "Aiyo Nova 1.2.0" --notes "Aiyo Nova 1.2.0 adds image vision uploads, PDF/DOCX/text attachments, and DuckDuckGo-backed web search with source links. Kilo model access remains subject to provider/model capability and rate limits."
