@@ -9,7 +9,12 @@ import kotlinx.coroutines.flow.Flow
 interface ChatRepository {
     suspend fun getCompletion(model: Model, message: Message): Result<String?>
     suspend fun getChatCompletion(model: Model, messages: List<Message>): Result<String?>
-    suspend fun getChatCompletionFlow(model: Model, messages: List<Message>, reason: Reason = Reason.None): Result<Flow<String>>
+    suspend fun getChatCompletionFlow(
+        model: Model,
+        messages: List<Message>,
+        reason: Reason = Reason.None,
+        webSearch: Boolean = false
+    ): Result<Flow<String>>
     suspend fun getConversations(): List<Conversation>
     fun getConversationsFlow(): Flow<List<Conversation>>
     suspend fun createConversation(title: String, model: Model = Model.defaultModel, isStarred: Boolean = false): Conversation

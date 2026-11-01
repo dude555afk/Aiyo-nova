@@ -9,10 +9,11 @@ import com.beradeep.aiyo.data.local.db.dao.MessageDao
 import com.beradeep.aiyo.data.local.db.entity.ConversationEntity
 import com.beradeep.aiyo.data.local.db.entity.MessageEntity
 import com.beradeep.aiyo.data.local.db.migrations.Migration1to2_Conversations
+import com.beradeep.aiyo.data.local.db.migrations.Migration2to3_Attachments
 
 @Database(
     entities = [ConversationEntity::class, MessageEntity::class],
-    version = 2,
+    version = 3,
     exportSchema = true
 )
 abstract class AiyoDatabase : RoomDatabase() {
@@ -23,7 +24,8 @@ abstract class AiyoDatabase : RoomDatabase() {
         const val DB_NAME = "aiyo.db"
 
         fun migrations() = arrayOf(
-            Migration1to2_Conversations()
+            Migration1to2_Conversations(),
+            Migration2to3_Attachments()
         )
 
         fun create(applicationContext: Context): AiyoDatabase = Room
