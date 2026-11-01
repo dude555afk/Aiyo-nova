@@ -273,7 +273,10 @@ open class ChatViewModel(
             val summaryTitle =
                 chatRepository.getChatCompletion(
                     model = uiState.value.selectedModel,
-                    messages = messages.map(UiMessage::toMessage) + prompt
+                    // Do not upload image/document bytes a second time just to generate a title.
+                    messages = messages.map(UiMessage::toMessage).map {
+                        it.copy(attachments = emptyList())
+                    } + prompt
                 )
             summaryTitle
                 .onSuccess { title ->
