@@ -3,7 +3,7 @@ on:
   push:
     branches: [main]
     paths:
-      - '.github/workflows/build-aiyo-nova.yml'
+      - '.github/workflows/**'
       - 'app/**'
       - 'data/**'
       - 'domain/**'
