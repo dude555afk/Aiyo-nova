@@ -1,0 +1,23 @@
+name: Restore from upstream
+
+on:
+  push:
+    paths:
+      - '.github/workflows/restore-from-upstream.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  restore:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Clone clean upstream project
+        run: |
+          git clone --depth=1 https://github.com/beradeep/aiyo.git upstream
+          cd upstream
+          git config user.name "Aiyo Nova restore bot"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git remote add target "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git"
+          git push target HEAD:main --force
