@@ -3,6 +3,7 @@ package com.beradeep.aiyo.ui.screens.chat
 import androidx.compose.runtime.Immutable
 import com.beradeep.aiyo.domain.model.Conversation
 import com.beradeep.aiyo.domain.model.Model
+import com.beradeep.aiyo.domain.model.MessageAttachment
 import com.beradeep.aiyo.domain.model.Reason
 import com.beradeep.aiyo.domain.repository.SettingRepository
 import com.mikepenz.markdown.model.State
@@ -17,6 +18,7 @@ data class ChatUiState(
     val isFetchingModels: Boolean,
     val inputText: String,
     val isWebSearchEnabled: Boolean,
+    val pendingAttachments: List<MessageAttachment>,
     val reasoningEffort: Reason,
     val requestFontSize: Int,
     val responseFontSize: Int,
@@ -39,6 +41,7 @@ data class ChatUiState(
                 isFetchingModels = false,
                 inputText = "",
                 isWebSearchEnabled = false,
+                pendingAttachments = emptyList(),
                 reasoningEffort = Reason.None,
                 requestFontSize = SettingRepository.DEFAULT_REQUEST_FONT_SIZE,
                 responseFontSize = SettingRepository.DEFAULT_RESPONSE_FONT_SIZE,
@@ -54,5 +57,6 @@ data class UiMessage(
     val id: String,
     val content: String?,
     val isUser: Boolean,
+    val attachments: List<MessageAttachment> = emptyList(),
     val markdownState: State = State.Loading()
 )

@@ -1,31 +1,26 @@
 # Aiyo Nova
 
-Aiyo Nova is an Android AI chat app based on [Aiyo](https://github.com/beradeep/aiyo), configured to use the **Kilo AI Gateway's anonymous free-model access**.
+Aiyo Nova is an Android AI chat app based on [Aiyo](https://github.com/beradeep/aiyo), configured to use the Kilo AI Gateway.
 
-## Kilo anonymous gateway
+## Chat capabilities
 
-- No OpenRouter account or API key is required.
-- Chat requests are sent to `https://ai-gateway.kilo.ai/api/v1`.
-- Requests omit the `Authorization` header entirely.
-- The model picker includes Kilo's `kilo-auto/free` router and models marked `:free` in Kilo's public model catalog.
-- Kilo documents anonymous free-model rate limiting at 200 requests per hour per IP. Availability and model limits can change.
+- Streaming chat with the selected Kilo-compatible model.
+- Image attachments sent as OpenAI-compatible vision content. The selected model must support image input.
+- PDF and DOCX text extraction, plus TXT, Markdown, CSV, JSON, XML, and source-code text files.
+- Multiple attachments per message, with attachment references preserved in local conversation history.
+- Web search powered by DuckDuckGo HTML results, including source links appended to responses.
+- Manual web-search mode through the composer search toggle, plus automatic search for freshness-sensitive questions.
+- Local conversation history, reasoning-effort controls, and theme/typography settings.
 
-Anonymous access is only for free models. Paid models require a Kilo API key and are intentionally not exposed in this build.
+Attachments are read from Android's document provider only when a message is sent. Images are sent to the selected model as image data; supported documents are extracted into text and included in the prompt. Image input availability depends on the selected model. Individual files are limited to 8 MB and up to five files can be attached to one message.
 
-## Privacy
+## Kilo gateway
 
-Conversation history is stored locally on the device. Prompts sent for inference are processed by Kilo and the selected upstream inference provider; do not send confidential information unless you have reviewed their data-handling terms.
+Chat requests are sent to `https://ai-gateway.kilo.ai/api/v1`. The app omits the Authorization header for anonymous access. Kilo model availability and anonymous rate limits can change, and not every listed model supports image input.
 
-## Features
+## Web search and privacy
 
-- Jetpack Compose interface
-- Streaming chat responses
-- Multiple free Kilo models
-- Local conversation history
-- Reasoning effort controls
-- Theme and typography settings
-
-OpenRouter-specific `:online` model routing is not used. A separate web-search tool integration is required for web search.
+When search is enabled or a question appears to require fresh information, the app queries DuckDuckGo and passes a small set of result titles, snippets, and URLs to the selected model. Responses include links to the results used. Search queries are sent to DuckDuckGo; prompts and attachments are sent to Kilo and the selected upstream inference provider. Conversation history and attachment URI references are stored locally on the device. Do not attach confidential information unless you have reviewed the relevant providers' data-handling terms.
 
 ## Tech stack
 
@@ -35,6 +30,7 @@ OpenRouter-specific `:online` model routing is not used. A separate web-search t
 - Room local database
 - MMKV key-value storage
 - OpenAI Kotlin SDK with Kilo Gateway-compatible requests
+- OkHttp for web search and PDFBox-Android for PDF text extraction
 
 ## Build
 
@@ -42,7 +38,7 @@ OpenRouter-specific `:online` model routing is not used. A separate web-search t
 2. Sync Gradle.
 3. Run the `:app` configuration on Android API 24 or newer.
 
-GitHub Actions builds the Aiyo Nova source in this repository and publishes an APK release.
+GitHub Actions builds the Aiyo Nova source and publishes the release APK.
 
 ## License
 

@@ -23,10 +23,11 @@ object RepositoryModule {
     @Provides
     @Singleton
     fun provideChatRepository(
+        @ApplicationContext context: Context,
         conversationDao: ConversationDao,
         messageDao: MessageDao,
         apiClient: DataApiClient
-    ): ChatRepository = ChatRepositoryImpl(conversationDao, messageDao, apiClient)
+    ): ChatRepository = ChatRepositoryImpl(context, conversationDao, messageDao, apiClient)
 
     @Provides
     @Singleton

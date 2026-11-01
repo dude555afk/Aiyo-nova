@@ -1,7 +1,14 @@
 package com.beradeep.aiyo.ui.screens.chat
 
 import android.content.ClipData
+import android.content.Context
+import android.content.Intent
+import android.net.Uri
+import android.provider.OpenableColumns
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
@@ -22,6 +29,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -30,6 +38,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.Chat
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.rounded.Add
+import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.ContentCopy
 import androidx.compose.material.icons.rounded.Menu
 import androidx.compose.material3.DrawerValue
@@ -43,12 +53,14 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.unit.DpSize
@@ -60,6 +72,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastRoundToInt
 import androidx.compose.ui.window.PopupPositionProvider
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.beradeep.aiyo.domain.model.MessageAttachment
 import com.beradeep.aiyo.ui.AiyoTheme
 import com.beradeep.aiyo.ui.LocalTypography
 import com.beradeep.aiyo.ui.R
@@ -107,6 +120,27 @@ private fun ChatScreen(
 ) {
     val drawerState = rememberDrawerState(DrawerValue.Closed)
     val coroutineScope = rememberCoroutineScope()
+    val context = LocalContext.current
+    val attachmentPicker = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.OpenMultipleDocuments()
+    ) { uris ->
+        val attachments = uris.map { uri ->
+            runCatching {
+                context.contentResolver.takePersistableUriPermission(
+                    uri,
+                    Intent.FLAG_GRANT_READ_URI_PERMISSION
+                )
+            }
+            MessageAttachment(
+                uri = uri.toString(),
+                name = attachmentDisplayName(context, uri),
+                mimeType = context.contentResolver.getType(uri) ?: "application/octet-stream"
+            )
+        }
+        if (attachments.isNotEmpty()) {
+            onUiEvent(ChatUiEvent.OnAttachmentsSelected(attachments))
+        }
+    }
 
     ModalNavigationDrawer(
         drawerState = drawerState,
@@ -316,17 +350,28 @@ private fun ChatScreen(
                                             )
                                         }
                                 ) {
-                                    MessageBubble(
-                                        content = msg.content.toString(),
-                                        isUser = msg.isUser,
-                                        markdownState = msg.markdownState,
-                                        fontSize =
-                                        if (msg.isUser) {
-                                            uiState.requestFontSize
-                                        } else {
-                                            uiState.responseFontSize
+                                    Column {
+                                        if (msg.attachments.isNotEmpty()) {
+                                            Text(
+                                                text = msg.attachments.joinToString(
+                                                    separator = " · ",
+                                                    prefix = "📎 "
+                                                ) { it.name },
+                                                color = AiyoTheme.colors.tertiary
+                                            )
                                         }
-                                    )
+                                        MessageBubble(
+                                            content = msg.content.toString(),
+                                            isUser = msg.isUser,
+                                            markdownState = msg.markdownState,
+                                            fontSize =
+                                            if (msg.isUser) {
+                                                uiState.requestFontSize
+                                            } else {
+                                                uiState.responseFontSize
+                                            }
+                                        )
+                                    }
                                 }
                             }
                         }
@@ -349,11 +394,54 @@ private fun ChatScreen(
                         }
                     }
 
+                    if (uiState.pendingAttachments.isNotEmpty()) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .horizontalScroll(rememberScrollState())
+                                .padding(bottom = 8.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            uiState.pendingAttachments.forEach { attachment ->
+                                Row(
+                                    modifier = Modifier
+                                        .padding(end = 6.dp)
+                                        .clip(RoundedCornerShape(20.dp))
+                                        .background(AiyoTheme.colors.surface)
+                                        .padding(start = 10.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text(text = attachment.name, color = AiyoTheme.colors.onSurface)
+                                    IconButton(
+                                        onClick = {
+                                            onUiEvent(ChatUiEvent.OnAttachmentRemoved(attachment.uri))
+                                        },
+                                        variant = IconButtonVariant.PrimaryGhost
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Rounded.Close,
+                                            contentDescription = "Remove attachment"
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+
                     Spacer(Modifier.height(8.dp))
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
+                        IconButton(
+                            onClick = { attachmentPicker.launch(arrayOf("*/*")) },
+                            variant = IconButtonVariant.PrimaryGhost
+                        ) {
+                            Icon(
+                                imageVector = Icons.Rounded.Add,
+                                contentDescription = "Attach image or file"
+                            )
+                        }
                         ChatInputTextField(
                             value = uiState.inputText,
                             onValueChange = { onUiEvent(ChatUiEvent.OnInputTextEdit(it)) },
@@ -448,4 +536,22 @@ fun tooltipPositionProvider(x: Int, y: Int): PopupPositionProvider {
             }
         }
     }
+}
+
+private fun attachmentDisplayName(context: Context, uri: Uri): String {
+    val fromProvider = runCatching {
+        context.contentResolver.query(
+            uri,
+            arrayOf(OpenableColumns.DISPLAY_NAME),
+            null,
+            null,
+            null
+        ).use { cursor ->
+            if (cursor != null && cursor.moveToFirst()) cursor.getString(0) else null
+        }
+    }.getOrNull()
+
+    return fromProvider?.takeIf { it.isNotBlank() }
+        ?: uri.lastPathSegment?.substringAfterLast('/')?.takeIf { it.isNotBlank() }
+        ?: "Attachment"
 }
