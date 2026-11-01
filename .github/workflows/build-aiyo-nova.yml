@@ -60,10 +60,16 @@ jobs:
           p.write_text(text)
           p = Path("source/app/build.gradle.kts")
           text = p.read_text()
-          text, a = re.subn(r"versionCode\s*=\s*\d+", "versionCode = 11", text, count=1)
-          text, b = re.subn(r'versionName\s*=\s*"[^"]+"', 'versionName = "1.1.0"', text, count=1)
-          if a != 1 or b != 1:
-              raise SystemExit("Could not set Aiyo Nova version")
+          text, app_id_count = re.subn(
+              r'applicationId\s*=\s*"[^"]+"',
+              'applicationId = "com.dude555afk.aiyonova"',
+              text,
+              count=1,
+          )
+          text, a = re.subn(r"versionCode\s*=\s*\d+", "versionCode = 12", text, count=1)
+          text, b = re.subn(r'versionName\s*=\s*"[^"]+"', 'versionName = "1.1.1"', text, count=1)
+          if app_id_count != 1 or a != 1 or b != 1:
+              raise SystemExit("Could not set Aiyo Nova application ID/version")
           p.write_text(text)
           PY
       - name: Generate release signing key
@@ -87,5 +93,5 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           APK="source/app/build/outputs/apk/githubRelease/app-githubRelease.apk"
-          TAG="aiyo-nova-1.1.0-${GITHUB_RUN_NUMBER}"
-          gh release create "$TAG" "$APK" --repo "$GITHUB_REPOSITORY" --title "Aiyo Nova 1.1.0" --notes "Aiyo Nova 1.1.0. Uses unauthenticated Kilo AI Gateway free-model access."
+          TAG="aiyo-nova-1.1.1-${GITHUB_RUN_NUMBER}"
+          gh release create "$TAG" "$APK" --repo "$GITHUB_REPOSITORY" --title "Aiyo Nova 1.1.1" --notes "Aiyo Nova 1.1.1. Uses unauthenticated Kilo AI Gateway model discovery; paid-model execution may require authorization."
