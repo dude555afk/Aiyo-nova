@@ -37,8 +37,10 @@ jobs:
           distribution: temurin
           java-version: '17'
 
-      - name: Set up Gradle
+      - name: Set up Gradle 8.13
         uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.13'
 
       - name: Generate release signing key
         run: |
@@ -53,8 +55,7 @@ jobs:
           SIGNING_KEY_ALIAS: aiyo-nova
           SIGNING_KEY_PASSWORD: android
         run: |
-          chmod +x gradlew
-          ./gradlew :app:assembleGithubRelease --no-daemon --stacktrace
+          gradle :app:assembleGithubRelease --no-daemon --stacktrace
 
       - name: Publish APK
         env:
