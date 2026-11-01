@@ -22,7 +22,7 @@ on:
 permissions:
   contents: write
 concurrency:
-  group: aiyo-nova-release
+  group: aiyo-nova-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: false
 jobs:
   build-release:
