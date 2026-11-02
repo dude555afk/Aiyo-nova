@@ -104,8 +104,7 @@ fun SettingsScreen(
                     detectTapGestures {
                         focusManager.clearFocus()
                     }
-                }
-        ,
+                },
             verticalArrangement = Arrangement.spacedBy(14.dp)
         ) {
             SettingsSection(
