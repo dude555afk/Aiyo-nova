@@ -1,8 +1,10 @@
 package com.beradeep.aiyo.ui.screens.settings
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -13,6 +15,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -24,6 +27,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
+import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -45,7 +49,6 @@ import com.beradeep.aiyo.ui.DarkColors
 import com.beradeep.aiyo.ui.LightColors
 import com.beradeep.aiyo.ui.LocalColors
 import com.beradeep.aiyo.ui.LocalTypography
-import com.beradeep.aiyo.ui.basics.components.HorizontalDivider
 import com.beradeep.aiyo.ui.basics.components.Icon
 import com.beradeep.aiyo.ui.basics.components.IconButton
 import com.beradeep.aiyo.ui.basics.components.IconButtonVariant
@@ -96,12 +99,14 @@ fun SettingsScreen(
                 .fillMaxSize()
                 .padding(innerPadding)
                 .verticalScroll(rememberScrollState())
-                .padding(16.dp)
+                .padding(horizontal = 16.dp, vertical = 18.dp)
                 .pointerInput(Unit) {
                     detectTapGestures {
                         focusManager.clearFocus()
                     }
                 }
+        ,
+            verticalArrangement = Arrangement.spacedBy(14.dp)
         ) {
             SettingsSection(
                 title = "Model Configuration",
@@ -114,12 +119,6 @@ fun SettingsScreen(
                     }
                 )
             }
-
-            HorizontalDivider(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 16.dp)
-            )
 
             SettingsSection(
                 title = "Typography Configuration",
@@ -143,12 +142,6 @@ fun SettingsScreen(
                     }
                 )
             }
-
-            HorizontalDivider(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 16.dp)
-            )
 
             SettingsSection(
                 title = "Theme Configuration",
@@ -188,27 +181,46 @@ private fun SettingsSection(
     icon: ImageVector,
     content: @Composable () -> Unit
 ) {
-    Column(
-        modifier = Modifier.fillMaxWidth()
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(22.dp),
+        color = AiyoTheme.colors.surface.copy(alpha = 0.62f),
+        border = BorderStroke(1.dp, AiyoTheme.colors.outline.copy(alpha = 0.72f))
     ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(18.dp)
         ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                tint = AiyoTheme.colors.primary,
-                modifier = Modifier.size(24.dp)
-            )
-            Text(
-                text = title,
-                style = LocalTypography.current.h3
-            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Surface(
+                    shape = CircleShape,
+                    color = AiyoTheme.colors.tertiary.copy(alpha = 0.13f)
+                ) {
+                    Box(
+                        modifier = Modifier.size(42.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = icon,
+                            contentDescription = null,
+                            tint = AiyoTheme.colors.tertiary,
+                            modifier = Modifier.size(21.dp)
+                        )
+                    }
+                }
+                Text(
+                    text = title,
+                    style = LocalTypography.current.h3
+                )
+            }
+            Spacer(modifier = Modifier.height(18.dp))
+            content()
         }
-        Spacer(modifier = Modifier.height(16.dp))
-        content()
     }
 }
 
