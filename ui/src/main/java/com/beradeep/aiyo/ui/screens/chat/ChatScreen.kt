@@ -152,6 +152,18 @@ private fun ChatScreen(
                 Column(
                     Modifier.systemBarsPadding()
                 ) {
+                    Column(
+                        modifier = Modifier.padding(horizontal = 20.dp, vertical = 24.dp)
+                    ) {
+                        Text("Aiyo Nova", style = LocalTypography.current.h1)
+                        Spacer(Modifier.height(4.dp))
+                        Text(
+                            "Your personal AI workspace",
+                            style = LocalTypography.current.body3,
+                            color = AiyoTheme.colors.textSecondary
+                        )
+                    }
+
                     Button(
                         modifier =
                         Modifier
@@ -209,7 +221,7 @@ private fun ChatScreen(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .clip(RoundedCornerShape(16.dp))
-                                .clickable { 
+                                .clickable {
                                     coroutineScope.launch {
                                         drawerState.close()
                                         onNavigateToSettings()
