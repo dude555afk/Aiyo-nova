@@ -38,7 +38,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.Chat
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.ContentCopy
 import androidx.compose.material.icons.rounded.Menu
@@ -153,11 +152,23 @@ private fun ChatScreen(
                 Column(
                     Modifier.systemBarsPadding()
                 ) {
+                    Column(
+                        modifier = Modifier.padding(horizontal = 20.dp, vertical = 24.dp)
+                    ) {
+                        Text("Aiyo Nova", style = LocalTypography.current.h1)
+                        Spacer(Modifier.height(4.dp))
+                        Text(
+                            "Your personal AI workspace",
+                            style = LocalTypography.current.body3,
+                            color = AiyoTheme.colors.textSecondary
+                        )
+                    }
+
                     Button(
                         modifier =
                         Modifier
                             .fillMaxWidth()
-                            .padding(16.dp)
+                            .padding(horizontal = 16.dp, vertical = 8.dp)
                             .clip(CircleShape),
                         onClick = {
                             onUiEvent(ChatUiEvent.OnNewChat)
@@ -173,6 +184,13 @@ private fun ChatScreen(
                             Text(text = "New Chat")
                         }
                     }
+
+                    Text(
+                        text = "YOUR CHATS",
+                        style = LocalTypography.current.label1,
+                        color = AiyoTheme.colors.textSecondary,
+                        modifier = Modifier.padding(horizontal = 20.dp, vertical = 10.dp)
+                    )
 
                     ConversationList(
                         conversations = uiState.conversations,
@@ -196,26 +214,27 @@ private fun ChatScreen(
                     )
 
                     Column(
-                        Modifier
-                            .fillMaxWidth()
-                            .clickable {
-                                coroutineScope.launch {
-                                    drawerState.close()
-                                    onNavigateToSettings()
-                                }
-                            }
+                        Modifier.fillMaxWidth()
                     ) {
-                        Spacer(Modifier.height(24.dp))
+                        Spacer(Modifier.height(16.dp))
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(horizontal = 16.dp),
-                            horizontalArrangement = Arrangement.SpaceBetween
+                                .clip(RoundedCornerShape(16.dp))
+                                .clickable {
+                                    coroutineScope.launch {
+                                        drawerState.close()
+                                        onNavigateToSettings()
+                                    }
+                                }
+                                .padding(horizontal = 20.dp, vertical = 16.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Text("Settings", style = LocalTypography.current.h4)
+                            Text("Settings", style = LocalTypography.current.body1)
                             Icon(Icons.Filled.Settings)
                         }
-                        Spacer(Modifier.height(24.dp))
+                        Spacer(Modifier.height(12.dp))
                     }
                 }
             }
@@ -433,20 +452,13 @@ private fun ChatScreen(
                         modifier = Modifier.fillMaxWidth(),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        IconButton(
-                            onClick = { attachmentPicker.launch(arrayOf("*/*")) },
-                            variant = IconButtonVariant.PrimaryGhost
-                        ) {
-                            Icon(
-                                imageVector = Icons.Rounded.Add,
-                                contentDescription = "Attach image or file"
-                            )
-                        }
                         ChatInputTextField(
+                            modifier = Modifier.weight(1f),
                             value = uiState.inputText,
                             onValueChange = { onUiEvent(ChatUiEvent.OnInputTextEdit(it)) },
                             onSend = { onUiEvent(ChatUiEvent.OnMessageSend) },
                             onWebSearch = { onUiEvent(ChatUiEvent.OnWebSearchTapped) },
+                            onAttach = { attachmentPicker.launch(arrayOf("*/*")) },
                             isWebSearchEnabled = uiState.isWebSearchEnabled,
                             isLoadingOrStreamingResponse =
                             uiState.isLoadingResponse || uiState.isStreamingResponse,
@@ -465,15 +477,21 @@ private fun ChatScreen(
                         modifier = Modifier.align(Alignment.Center)
                     ) {
                         Image(
-                            modifier = Modifier.size(240.dp),
+                            modifier = Modifier.size(144.dp),
                             painter = painterResource(id = R.drawable.aiyo_icon),
-                            contentDescription = "Aiyo Icon"
+                            contentDescription = "Aiyo Nova"
                         )
+                        Spacer(Modifier.height(18.dp))
                         Text(
-                            text = "Hello there! How can I assist you today?",
-                            style = AiyoTheme.typography.body1,
-                            color = AiyoTheme.colors.tertiary,
-                            fontStyle = FontStyle.Italic
+                            text = "What can I help with?",
+                            style = LocalTypography.current.h2,
+                            color = AiyoTheme.colors.text
+                        )
+                        Spacer(Modifier.height(6.dp))
+                        Text(
+                            text = "Ask anything, explore an idea, or attach a file.",
+                            style = LocalTypography.current.body2,
+                            color = AiyoTheme.colors.textSecondary
                         )
                     }
                 }
