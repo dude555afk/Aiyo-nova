@@ -60,7 +60,7 @@ internal fun presentCitations(rawContent: String): CitationPresentation {
 
 private fun parseSourceLines(text: String): List<CitationSource> {
     val linePattern = Regex(
-        "(?m)^\\s*(?:[-*]\\s*)?\\[(\\d{1,2})]\\s*\\[([^]\\r\\n]+)]\\((https?://[^)\\s]+)\\)\\s*$"
+        "(?m)^\\s*(?:[-*]\\s*)?\\[(\\d{1,2})]\\s*\\[(.+?)]\\((https?://[^)\\s]+)\\)\\s*$"
     )
     return linePattern.findAll(text).mapNotNull { match ->
         val number = match.groupValues[1].toIntOrNull() ?: return@mapNotNull null
