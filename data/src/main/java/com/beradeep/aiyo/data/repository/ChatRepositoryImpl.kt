@@ -153,7 +153,9 @@ class ChatRepositoryImpl(
         val lines = results.mapIndexed { index, result ->
             "[" + (index + 1) + "] [" + result.title.replace("]", "") + "](" + result.url + ")"
         }
-        return "\n\n**Sources**\n" + lines.joinToString("\n")
+        return "\n\n<!--AIYO_SOURCES_START-->\n" +
+            lines.joinToString("\n") +
+            "\n<!--AIYO_SOURCES_END-->"
     }
 
     private fun searchWeb(query: String): List<WebSearchResult> {
