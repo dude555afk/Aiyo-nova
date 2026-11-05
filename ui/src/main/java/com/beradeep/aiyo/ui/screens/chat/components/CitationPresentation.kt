@@ -71,7 +71,7 @@ private fun parseSourceLines(text: String): List<CitationSource> {
             .removePrefix("www.")
         if (title.isBlank() || domain.isBlank()) return@mapNotNull null
         CitationSource(number, title, url, domain)
-    }.distinctBy { it.number }.sortedBy { it.number }
+    }.distinctBy { it.number }.sortedBy { it.number }.toList()
 }
 
 private fun linkInlineCitations(
