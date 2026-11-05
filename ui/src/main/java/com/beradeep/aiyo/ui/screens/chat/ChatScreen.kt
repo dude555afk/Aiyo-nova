@@ -88,6 +88,7 @@ import com.beradeep.aiyo.ui.basics.components.TooltipBox
 import com.beradeep.aiyo.ui.basics.components.rememberTooltipState
 import com.beradeep.aiyo.ui.basics.components.topbar.TopBar
 import com.beradeep.aiyo.ui.screens.chat.components.ChatInputTextField
+import com.beradeep.aiyo.ui.screens.chat.components.CitationMessage
 import com.beradeep.aiyo.ui.screens.chat.components.ChatOptions
 import com.beradeep.aiyo.ui.screens.chat.components.ConversationList
 import com.beradeep.aiyo.ui.screens.chat.components.DeleteConversationDialog
@@ -379,17 +380,20 @@ private fun ChatScreen(
                                                 color = AiyoTheme.colors.tertiary
                                             )
                                         }
-                                        MessageBubble(
-                                            content = msg.content.toString(),
-                                            isUser = msg.isUser,
-                                            markdownState = msg.markdownState,
-                                            fontSize =
-                                            if (msg.isUser) {
-                                                uiState.requestFontSize
-                                            } else {
-                                                uiState.responseFontSize
-                                            }
-                                        )
+                                        if (msg.isUser) {
+                                            MessageBubble(
+                                                content = msg.content.toString(),
+                                                isUser = true,
+                                                markdownState = msg.markdownState,
+                                                fontSize = uiState.requestFontSize
+                                            )
+                                        } else {
+                                            CitationMessage(
+                                                content = msg.content.orEmpty(),
+                                                markdownState = msg.markdownState,
+                                                fontSize = uiState.responseFontSize
+                                            )
+                                        }
                                     }
                                 }
                             }
